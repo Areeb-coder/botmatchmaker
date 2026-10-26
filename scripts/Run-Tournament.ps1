@@ -57,8 +57,46 @@ if ($Mode -eq 'CandidateVsAll') {
   }
 }
 if ($Lines.Count -eq 0) { throw 'No matches generated.' }
+
+# Interactive collision handling: protect existing replays and reports.
+$PlannedReplays = @($Manifest | ForEach-Object { Join-Path $Root ($_.replay.Replace('/', '\')) })
+$ExistingReplays = @($PlannedReplays | Where-Object { Test-Path $_ })
+$FixedReports = @(
+  'reports/tournament-match-results.csv', 'reports/tournament-standings.csv',
+  'reports/candidate-head-to-head.csv', 'reports/candidate-by-map.csv', 'reports/tournament-report.xlsx'
+)
+$ExistingReports = @($FixedReports | ForEach-Object { Join-Path $Root ($_ -replace '/', '\') } | Where-Object { Test-Path $_ })
+$OutputPolicy = 'New'
+if ($ExistingReplays.Count -gt 0 -or $ExistingReports.Count -gt 0) {
+  Write-Host "`nExisting tournament files were detected." -ForegroundColor Yellow
+  Write-Host "Conflicting replay files: $($ExistingReplays.Count)"
+  Write-Host "Existing report files: $($ExistingReports.Count)"
+  Write-Host '1 = Rematch and REPLACE matching replays/reports'
+  Write-Host '2 = Rematch and CREATE NEW timestamped reports/replays (preserve old files)'
+  Write-Host '3 = Cancel without changes'
+  $choice = Read-Host 'Choose 1, 2, or 3'
+  if ($choice -eq '3' -or [string]::IsNullOrWhiteSpace($choice)) { Write-Host 'Cancelled; no files changed.' -ForegroundColor Yellow; return }
+  if ($choice -notin @('1','2')) { throw 'Invalid choice. Run again and choose 1, 2, or 3.' }
+  if ($choice -eq '1') { $OutputPolicy = 'Replace' } else { $OutputPolicy = 'New' }
+}
+if ($OutputPolicy -eq 'New') {
+  # Fresh suffixes ensure no collision with old replay files or prior manifests.
+  $nonce = Get-Date -Format 'yyyyMMdd-HHmmss'
+  $Lines = [System.Collections.Generic.List[string]]::new()
+  foreach ($row in $Manifest) {
+    $row.replay = $row.replay -replace '\.repl26a$', "-$nonce.repl26a"
+    $row.map = $row.map
+    $Lines.Add("bots/$($row.bot_a) bots/$($row.bot_b) $($row.map) $($row.replay)")
+  }
+  $MatchFile = $MatchFile -replace '\.txt$', "-$nonce.txt"
+  $ManifestFile = $MatchFile -replace '\.txt$', '.csv'
+  $LogFile = $LogFile -replace '\.log$', "-$nonce.log"
+} else {
+  # Delete only the exact replay files scheduled for this confirmed replacement.
+  foreach ($file in $ExistingReplays) { Remove-Item -LiteralPath $file -Force }
+}
 $Lines | Set-Content -Encoding utf8 $MatchFile
-$ManifestFile = ($MatchFile -replace '\.txt$','.csv')
+if (!$ManifestFile) { $ManifestFile = ($MatchFile -replace '\.txt$','.csv') }
 $Manifest | Export-Csv -NoTypeInformation -Encoding utf8 $ManifestFile
 Write-Host "Bots: $($Bots -join ', ')" -ForegroundColor Cyan
 Write-Host "Maps in this run: $($Maps.Count)" -ForegroundColor Cyan
@@ -78,7 +116,8 @@ try {
 if ($Code -ne 0) { throw "run-batch exited with code $Code. See $LogFile and inspect the first error." }
 Write-Host "`nBatch run finished. Log: $LogFile" -ForegroundColor Green
 Write-Host 'Generating CSV/Excel results from the actual winner lines in the log...' -ForegroundColor Cyan
-& python '.\scripts\summarize_tournament_log.py' --manifest $ManifestFile --log $LogFile --candidate $Candidate
+if ($OutputPolicy -eq 'New') { $ReportSuffix = [IO.Path]::GetFileNameWithoutExtension($ManifestFile) -replace '^matches-', '' } else { $ReportSuffix = '' }
+& python '.\scripts\summarize_tournament_log.py' --manifest $ManifestFile --log $LogFile --candidate $Candidate --output-suffix $ReportSuffix
 $SummaryCode = $LASTEXITCODE
 if ($SummaryCode -ne 0) { Write-Warning "Tournament completed, but the report parser flagged incomplete/unmatched results (exit $SummaryCode). Review the validation counts above and the log." }
 Write-Host 'No ranked submission is performed.' -ForegroundColor Green

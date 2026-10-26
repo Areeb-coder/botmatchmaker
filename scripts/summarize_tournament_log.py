@@ -77,6 +77,7 @@ def main():
     ap.add_argument('--manifest', help='CSV manifest created by Run-Tournament.ps1')
     ap.add_argument('--log', help='run-batch log created by Run-Tournament.ps1')
     ap.add_argument('--candidate', default='candidate-bot', help='candidate name for head-to-head/by-map reports')
+    ap.add_argument('--output-suffix', default='', help='optional suffix for report filenames, preserving earlier reports')
     args = ap.parse_args()
     manifest, log = choose_files(args.manifest, args.log)
     planned = read_csv(manifest)
@@ -145,8 +146,9 @@ def main():
 
     out = ROOT / 'reports'
     out.mkdir(exist_ok=True)
-    result_path = out / 'tournament-match-results.csv'
-    standings_path = out / 'tournament-standings.csv'
+    suffix = ('-' + re.sub(r'[^A-Za-z0-9_-]', '_', args.output_suffix)) if args.output_suffix else ''
+    result_path = out / f'tournament-match-results{suffix}.csv'
+    standings_path = out / f'tournament-standings{suffix}.csv'
     save_csv(result_path, results)
     save_csv(standings_path, standings)
     candidate = args.candidate
@@ -159,7 +161,7 @@ def main():
         losses = sum(r['loser'] == candidate for r in subset)
         h2h.append({'candidate': candidate, 'opponent': opponent, 'matches': len(subset), 'wins': wins,
                     'losses': losses, 'win_pct': round(100*wins/len(subset), 2) if subset else 0})
-    h2h_path = out / 'candidate-head-to-head.csv'
+    h2h_path = out / f'candidate-head-to-head{suffix}.csv'
     save_csv(h2h_path, h2h)
     by_map = defaultdict(list)
     for r in results:
@@ -171,11 +173,11 @@ def main():
         losses = sum(r['loser'] == candidate for r in subset)
         map_rows.append({'map': name, 'matches': len(subset), 'wins': wins, 'losses': losses,
                          'win_pct': round(100*wins/len(subset), 2) if subset else 0})
-    map_path = out / 'candidate-by-map.csv'
+    map_path = out / f'candidate-by-map{suffix}.csv'
     save_csv(map_path, map_rows)
 
     # Convenient Excel workbook; CSV outputs remain the canonical simple format.
-    xlsx_path = out / 'tournament-report.xlsx'
+    xlsx_path = out / f'tournament-report{suffix}.xlsx'
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment
