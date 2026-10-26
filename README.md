@@ -7,8 +7,11 @@ This is a local-only matchmaker for comparing bot folders against the maps in `m
 Open PowerShell in this extracted folder (the folder containing `cambc.toml`). If CAMBC is already installed and maps/builds are ready, run:
 
 ```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\Run-Matchmaker.ps1 -Mode CandidateVsAll -Coverage Quick
 ```
+
+The execution-policy setting applies only to the current PowerShell process. Run it in the same window before invoking the script.
 
 For a full map-pool run:
 
