@@ -1,4 +1,4 @@
-param(
+﻿param(
   [ValidateSet('CandidateVsAll','AllPairs')][string]$Mode = 'CandidateVsAll',
   [ValidateSet('Quick','AllMaps')][string]$Coverage = 'Quick',
   [string]$Candidate = 'candidate-bot',
@@ -38,8 +38,12 @@ foreach ($Pair in $Pairs) {
     $mapRel = $Map.FullName.Substring($Root.TrimEnd('\').Length + 1).Replace('\','/')
     Write-Progress -Activity 'CAMBC statistics tournament' -Status "$Run / $Total : $($Pair.a) vs $($Pair.b) on $($Map.Name)" -PercentComplete (($Run/$Total)*100)
     Write-Host "[$Run/$Total] $($Pair.a) vs $($Pair.b) | $mapRel"
-    & cambc run $Pair.a $Pair.b --map $mapRel --statistics $stats 2>&1 | Tee-Object -FilePath $log
-    $exit = $LASTEXITCODE
+    $PreviousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+      & cambc run $Pair.a $Pair.b --map $mapRel --statistics $stats 2>&1 | Tee-Object -FilePath $log
+      $exit = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $PreviousPreference }
     $Rows.Add([pscustomobject]@{id=$id;bot_a=$Pair.a;bot_b=$Pair.b;map=$mapRel;stats_json=$stats;log=$log;exit_code=$exit;status=$(if($exit -eq 0 -and (Test-Path $stats)){'completed'}else{'failed_or_no_stats'})})
     if ($exit -ne 0) { Write-Warning "Match failed; see $log" }
   }

@@ -1,4 +1,4 @@
-param(
+﻿param(
   [ValidateSet('CandidateVsAll','AllPairs')][string]$Mode = 'CandidateVsAll',
   [ValidateSet('Quick','AllMaps')][string]$Coverage = 'Quick',
   [int]$Jobs = 2,
@@ -58,16 +58,27 @@ if ($Mode -eq 'CandidateVsAll') {
 }
 if ($Lines.Count -eq 0) { throw 'No matches generated.' }
 $Lines | Set-Content -Encoding utf8 $MatchFile
-$Manifest | Export-Csv -NoTypeInformation -Encoding utf8 ($MatchFile -replace '\.txt$','.csv')
+$ManifestFile = ($MatchFile -replace '\.txt$','.csv')
+$Manifest | Export-Csv -NoTypeInformation -Encoding utf8 $ManifestFile
 Write-Host "Bots: $($Bots -join ', ')" -ForegroundColor Cyan
 Write-Host "Maps in this run: $($Maps.Count)" -ForegroundColor Cyan
 Write-Host "Matches planned: $($Lines.Count)" -ForegroundColor Cyan
 Write-Host "Match plan: $MatchFile" -ForegroundColor Cyan
-Write-Host "Manifest: $($MatchFile -replace '\.txt$','.csv')" -ForegroundColor Cyan
+Write-Host "Manifest: $ManifestFile" -ForegroundColor Cyan
 Write-Host "Replays will be saved under replays/." -ForegroundColor Cyan
 Write-Host "Starting local tournament. No ranked submission is performed." -ForegroundColor Green
-& cambc run-batch $MatchFile --jobs $Jobs 2>&1 | Tee-Object -FilePath $LogFile
-$Code = $LASTEXITCODE
+# Native CAMBC output can write progress/diagnostics to stderr. Keep PowerShell from
+# treating that text as a terminating error; the process exit code is checked explicitly.
+$PreviousPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+try {
+  & cambc run-batch $MatchFile --jobs $Jobs 2>&1 | Tee-Object -FilePath $LogFile
+  $Code = $LASTEXITCODE
+} finally { $ErrorActionPreference = $PreviousPreference }
 if ($Code -ne 0) { throw "run-batch exited with code $Code. See $LogFile and inspect the first error." }
 Write-Host "`nBatch run finished. Log: $LogFile" -ForegroundColor Green
-Write-Host 'This script saves matches/replays; it does not invent a win-rate summary. Inspect the log/replays, or run the statistics tournament script.' -ForegroundColor Yellow
+Write-Host 'Generating CSV/Excel results from the actual winner lines in the log...' -ForegroundColor Cyan
+& python '.\scripts\summarize_tournament_log.py' --manifest $ManifestFile --log $LogFile --candidate $Candidate
+$SummaryCode = $LASTEXITCODE
+if ($SummaryCode -ne 0) { Write-Warning "Tournament completed, but the report parser flagged incomplete/unmatched results (exit $SummaryCode). Review the validation counts above and the log." }
+Write-Host 'No ranked submission is performed.' -ForegroundColor Green

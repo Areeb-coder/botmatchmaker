@@ -1,4 +1,4 @@
-param([switch]$InstallOrUpgradeCLI)
+﻿param([switch]$InstallOrUpgradeCLI)
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
@@ -27,8 +27,10 @@ Write-Host "`nBuilding each bot..." -ForegroundColor Cyan
 $Failed = @()
 foreach ($Bot in $Bots) {
   Write-Host "BUILD: $($Bot.Name)" -ForegroundColor Yellow
-  cambc build $Bot.Name
-  if ($LASTEXITCODE -ne 0) { $Failed += $Bot.Name; Write-Host "BUILD FAILED: $($Bot.Name)" -ForegroundColor Red }
+  $PreviousPreference = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try { cambc build $Bot.Name; $BuildCode = $LASTEXITCODE } finally { $ErrorActionPreference = $PreviousPreference }
+  if ($BuildCode -ne 0) { $Failed += $Bot.Name; Write-Host "BUILD FAILED: $($Bot.Name)" -ForegroundColor Red }
 }
 if ($Failed.Count -gt 0) { throw "Build failures: $($Failed -join ', '). Fix these before running tournaments." }
 Write-Host "`nSetup complete. All discovered bots built successfully; this does not prove they are competitive." -ForegroundColor Green
