@@ -1,0 +1,13 @@
+# CAMBC build outputs
+.cambc/
+bots/*/.cambc/
+.vscode/settings.json
+replays/*
+reports/logs/*
+reports/stats/*.json
+reports/stats/*.csv
+reports/stats/*.log
+matches-*.txt
+matches-*.csv
+!replays/.gitkeep
+!reports/stats/.gitkeep
