@@ -1,0 +1,71 @@
+﻿map,matches,wins,losses,win_pct,wilson95_low_pct,wilson95_high_pct,priority
+00ambush,6,3,3,50.0,18.76,81.24,P2 investigate
+00anvil,6,4,2,66.67,30.0,90.32,observe
+00breadcrumbs,6,3,3,50.0,18.76,81.24,P2 investigate
+00collision,6,4,2,66.67,30.0,90.32,observe
+00contest,6,3,3,50.0,18.76,81.24,P2 investigate
+00corners,6,3,3,50.0,18.76,81.24,P2 investigate
+00crater,6,3,3,50.0,18.76,81.24,P2 investigate
+00dunes,6,3,3,50.0,18.76,81.24,P2 investigate
+00eight,6,2,4,33.33,9.68,70.0,P1 investigate
+00elkring,6,4,2,66.67,30.0,90.32,observe
+00expanse,6,4,2,66.67,30.0,90.32,observe
+00fragment,6,6,0,100.0,60.97,100,observe
+00galaxy,6,4,2,66.67,30.0,90.32,observe
+00gem-fields,6,4,2,66.67,30.0,90.32,observe
+00gemfight,6,3,3,50.0,18.76,81.24,P2 investigate
+00great-wall,6,4,2,66.67,30.0,90.32,observe
+00interlock,6,2,4,33.33,9.68,70.0,P1 investigate
+00lanes,6,3,3,50.0,18.76,81.24,P2 investigate
+00lost-world,6,6,0,100.0,60.97,100,observe
+00monolith,6,1,5,16.67,3.01,56.35,P1 investigate
+00oasis,6,3,3,50.0,18.76,81.24,P2 investigate
+00packs,6,0,6,0.0,0.0,39.03,P1 investigate
+00pilgrimage,6,4,2,66.67,30.0,90.32,observe
+00quadrants,6,2,4,33.33,9.68,70.0,P1 investigate
+00quarry,6,3,3,50.0,18.76,81.24,P2 investigate
+00reverse-spiral,6,3,3,50.0,18.76,81.24,P2 investigate
+00ribs,6,3,3,50.0,18.76,81.24,P2 investigate
+00road-of-riches,6,4,2,66.67,30.0,90.32,observe
+00rows,6,3,3,50.0,18.76,81.24,P2 investigate
+00rushbait-v2,6,4,2,66.67,30.0,90.32,observe
+00split,6,4,2,66.67,30.0,90.32,observe
+00stampede,6,4,2,66.67,30.0,90.32,observe
+00swirl,6,2,4,33.33,9.68,70.0,P1 investigate
+00the-line,6,3,3,50.0,18.76,81.24,P2 investigate
+00vault,6,2,4,33.33,9.68,70.0,P1 investigate
+01big-world,6,2,4,33.33,9.68,70.0,P1 investigate
+01boss-battle,6,6,0,100.0,60.97,100,observe
+01broken-curve,6,1,5,16.67,3.01,56.35,P1 investigate
+01concentrated-wealth,6,3,3,50.0,18.76,81.24,P2 investigate
+01corridors,6,3,3,50.0,18.76,81.24,P2 investigate
+01elk-arena,6,1,5,16.67,3.01,56.35,P1 investigate
+01fracture,6,3,3,50.0,18.76,81.24,P2 investigate
+01gold-rush,6,3,3,50.0,18.76,81.24,P2 investigate
+01hooks,6,1,5,16.67,3.01,56.35,P1 investigate
+01islands,6,6,0,100.0,60.97,100,observe
+01shortcut,6,3,3,50.0,18.76,81.24,P2 investigate
+01starfish,6,5,1,83.33,43.65,96.99,observe
+01starvation,6,4,2,66.67,30.0,90.32,observe
+01the-farm,6,3,3,50.0,18.76,81.24,P2 investigate
+01yellow-brick-road,6,4,2,66.67,30.0,90.32,observe
+02arena,6,3,3,50.0,18.76,81.24,P2 investigate
+02crossing,6,3,3,50.0,18.76,81.24,P2 investigate
+02cuts,6,4,2,66.67,30.0,90.32,observe
+02famine,6,1,5,16.67,3.01,56.35,P1 investigate
+02fields,6,5,1,83.33,43.65,96.99,observe
+02geodes,6,2,4,33.33,9.68,70.0,P1 investigate
+02gift-wrapping,6,4,2,66.67,30.0,90.32,observe
+02guardians,6,3,3,50.0,18.76,81.24,P2 investigate
+02harvest,6,3,3,50.0,18.76,81.24,P2 investigate
+02stalactites,6,3,3,50.0,18.76,81.24,P2 investigate
+02tangle,6,4,2,66.67,30.0,90.32,observe
+02the-pack,6,2,4,33.33,9.68,70.0,P1 investigate
+02the-pond,6,3,3,50.0,18.76,81.24,P2 investigate
+02treasure-box,6,1,5,16.67,3.01,56.35,P1 investigate
+02uncharted-lands,6,3,3,50.0,18.76,81.24,P2 investigate
+adgato-gemcombat1,6,2,4,33.33,9.68,70.0,P1 investigate
+adgato-gemcombat2,6,1,5,16.67,3.01,56.35,P1 investigate
+adgato-gemcombat3,6,3,3,50.0,18.76,81.24,P2 investigate
+adgato-gemcombat4,6,5,1,83.33,43.65,96.99,observe
+adgato-gemcombat5,6,2,4,33.33,9.68,70.0,P1 investigate

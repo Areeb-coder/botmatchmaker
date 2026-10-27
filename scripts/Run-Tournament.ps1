@@ -1,8 +1,9 @@
 ﻿param(
-  [ValidateSet('CandidateVsAll','AllPairs')][string]$Mode = 'CandidateVsAll',
+  [ValidateSet('CandidateVsAll','CandidateVsOpponent','AllPairs')][string]$Mode = 'CandidateVsAll',
   [ValidateSet('Quick','AllMaps')][string]$Coverage = 'Quick',
   [int]$Jobs = 2,
-  [string]$Candidate = 'candidate-bot'
+  [string]$Candidate = 'candidate-bot',
+  [string]$Opponent = ''
 )
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
@@ -10,7 +11,12 @@ Set-Location $Root
 if (!(Test-Path 'cambc.toml')) { throw 'Run from the extracted workspace kit; root cambc.toml not found.' }
 $Bots = @(Get-ChildItem 'bots' -Directory | Where-Object { (Test-Path (Join-Path $_.FullName 'src/main.cpp')) -and (Test-Path (Join-Path $_.FullName 'cambc.toml')) } | Sort-Object Name | ForEach-Object { $_.Name })
 if ($Bots.Count -lt 2) { throw 'Need at least two configured bots under bots/.' }
-if ($Mode -eq 'CandidateVsAll' -and $Candidate -notin $Bots) { throw "Candidate '$Candidate' not found. Bots detected: $($Bots -join ', ')" }
+if ($Mode -in @('CandidateVsAll','CandidateVsOpponent') -and $Candidate -notin $Bots) { throw "Candidate '$Candidate' not found. Bots detected: $($Bots -join ', ')" }
+if ($Mode -eq 'CandidateVsOpponent') {
+  if ([string]::IsNullOrWhiteSpace($Opponent)) { throw "Mode CandidateVsOpponent requires -Opponent <bot-folder-name>." }
+  if ($Opponent -notin $Bots) { throw "Opponent '$Opponent' not found. Bots detected: $($Bots -join ', ')" }
+  if ($Opponent -eq $Candidate) { throw 'Candidate and opponent must be two different bots.' }
+}
 $Maps = @(Get-ChildItem 'maps' -File -Recurse | Where-Object { $_.Name -like '*.map26a' } | Sort-Object FullName)
 if ($Maps.Count -eq 0) {
   Write-Host 'No maps found; running cambc maps pull...' -ForegroundColor Yellow
@@ -23,6 +29,11 @@ if ($Coverage -eq 'Quick') { $Maps = @($Maps | Select-Object -First 1) }
 New-Item -ItemType Directory -Force 'replays', 'reports/logs' | Out-Null
 $Stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 if ($Mode -eq 'CandidateVsAll') { $MatchFile = "matches-candidate-vs-all-$Coverage-$Stamp.txt"; $LogFile = "reports/logs/candidate-vs-all-$Coverage-$Stamp.log" }
+elseif ($Mode -eq 'CandidateVsOpponent') {
+  $PairTag = "$Candidate-vs-$Opponent"
+  $MatchFile = "matches-$PairTag-$Coverage-$Stamp.txt"
+  $LogFile = "reports/logs/$PairTag-$Coverage-$Stamp.log"
+}
 else { $MatchFile = "matches-all-pairs-$Coverage-$Stamp.txt"; $LogFile = "reports/logs/all-pairs-$Coverage-$Stamp.log" }
 $Lines = [System.Collections.Generic.List[string]]::new()
 $Manifest = [System.Collections.Generic.List[object]]::new()
@@ -37,13 +48,19 @@ function Add-MatchLine([string]$A,[string]$B,[System.IO.FileInfo]$Map,[string]$T
   $script:Manifest.Add([pscustomobject]@{ id=$id; bot_a=$A; bot_b=$B; map=$mapRel; replay=$replay; mode=$script:Mode; coverage=$script:Coverage })
 }
 if ($Mode -eq 'CandidateVsAll') {
-  foreach ($Opponent in $Bots) {
-    if ($Opponent -eq $Candidate) { continue }
+  foreach ($OtherBot in $Bots) {
+    if ($OtherBot -eq $Candidate) { continue }
     foreach ($Map in $Maps) {
       $safeMap = [IO.Path]::GetFileNameWithoutExtension($Map.Name) -replace '[^A-Za-z0-9_-]','_'
-      Add-MatchLine $Candidate $Opponent $Map "candA-$Opponent-$safeMap"
-      Add-MatchLine $Opponent $Candidate $Map "candB-$Opponent-$safeMap"
+      Add-MatchLine $Candidate $OtherBot $Map "candA-$OtherBot-$safeMap"
+      Add-MatchLine $OtherBot $Candidate $Map "candB-$OtherBot-$safeMap"
     }
+  }
+} elseif ($Mode -eq 'CandidateVsOpponent') {
+  foreach ($Map in $Maps) {
+    $safeMap = [IO.Path]::GetFileNameWithoutExtension($Map.Name) -replace '[^A-Za-z0-9_-]','_'
+    Add-MatchLine $Candidate $Opponent $Map "pair-$Candidate-vs-$Opponent-A-$safeMap"
+    Add-MatchLine $Opponent $Candidate $Map "pair-$Candidate-vs-$Opponent-B-$safeMap"
   }
 } else {
   for ($i=0; $i -lt $Bots.Count; $i++) {
@@ -98,7 +115,11 @@ if ($OutputPolicy -eq 'New') {
 $Lines | Set-Content -Encoding utf8 $MatchFile
 if (!$ManifestFile) { $ManifestFile = ($MatchFile -replace '\.txt$','.csv') }
 $Manifest | Export-Csv -NoTypeInformation -Encoding utf8 $ManifestFile
-Write-Host "Bots: $($Bots -join ', ')" -ForegroundColor Cyan
+if ($Mode -eq 'CandidateVsOpponent') {
+  Write-Host "Selected pair: $Candidate vs $Opponent" -ForegroundColor Cyan
+} else {
+  Write-Host "Bots: $($Bots -join ', ')" -ForegroundColor Cyan
+}
 Write-Host "Maps in this run: $($Maps.Count)" -ForegroundColor Cyan
 Write-Host "Matches planned: $($Lines.Count)" -ForegroundColor Cyan
 Write-Host "Match plan: $MatchFile" -ForegroundColor Cyan
@@ -117,7 +138,11 @@ if ($Code -ne 0) { throw "run-batch exited with code $Code. See $LogFile and ins
 Write-Host "`nBatch run finished. Log: $LogFile" -ForegroundColor Green
 Write-Host 'Generating CSV/Excel results from the actual winner lines in the log...' -ForegroundColor Cyan
 if ($OutputPolicy -eq 'New') { $ReportSuffix = [IO.Path]::GetFileNameWithoutExtension($ManifestFile) -replace '^matches-', '' } else { $ReportSuffix = '' }
-& python '.\scripts\summarize_tournament_log.py' --manifest $ManifestFile --log $LogFile --candidate $Candidate --output-suffix $ReportSuffix
+if ($Mode -eq 'CandidateVsOpponent') {
+  & python '.\scripts\summarize_tournament_log.py' --manifest $ManifestFile --log $LogFile --candidate $Candidate --output-suffix $ReportSuffix
+} else {
+  & python '.\scripts\summarize_tournament_log.py' --manifest $ManifestFile --log $LogFile --candidate $Candidate --output-suffix $ReportSuffix
+}
 $SummaryCode = $LASTEXITCODE
 if ($SummaryCode -ne 0) { Write-Warning "Tournament completed, but the report parser flagged incomplete/unmatched results (exit $SummaryCode). Review the validation counts above and the log." }
 Write-Host 'No ranked submission is performed.' -ForegroundColor Green

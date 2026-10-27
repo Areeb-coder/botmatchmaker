@@ -1,0 +1,39 @@
+{
+  "created_at_utc": "2026-10-26T16:59:10.174261+00:00",
+  "input_archive": "Battlecode_Final_Matchmaker_Complete.zip",
+  "input_archive_sha256": "412e6afcfe39e589e1edc66130098dc4416e8f511bcd7a28369d58c8ebb2eb1b",
+  "project_root_in_zip": "bestbot-workspace/",
+  "inventory": {
+    "map_files": 70,
+    "replay_files": 426,
+    "bot_cpp_files": 8,
+    "match_result_rows": 420
+  },
+  "source_preservation": {
+    "bestbot-workspace/bots/candidate-bot/src/bot.cpp": "b18d2e5de69ffa1e609f96924448566764ef0f7955f0d2c82ed20a6aafaeb0b7",
+    "bestbot-workspace/bots/Ankv21/src/bot.cpp": "88c5f51cb86824a2d75de2e4d0748d0083ec284adaab856f7213fae14c17804b",
+    "bestbot-workspace/bots/v20/src/bot.cpp": "b95e1871f375e94603370cc713acb23c6bf0c3216a7d82ebe180292a2ff06639",
+    "bestbot-workspace/bots/v22/src/bot.cpp": "b5e2843bbc91f086495d12f4c2d75baff30b3988df9b68e0d2068e404bf543b0"
+  },
+  "added": [
+    "research/REPOSITORY_AUDIT_20261026.md",
+    "research/IMPROVEMENT_BACKLOG.md",
+    "research/PIPELINE_DESIGN.md",
+    "research/PACKAGING_VALIDATION.md",
+    "CAMBC_2026a_Repository_Audit.md",
+    "scripts/preflight_audit.py",
+    "scripts/verify_tournament.py",
+    "scripts/analyze_tournament.py",
+    "Run-Research-Pipeline.ps1",
+    "reports/research-analysis/historical-run/*"
+  ],
+  "tests": {
+    "zip_integrity": "PASS",
+    "python_syntax_checks": "PASS",
+    "manifest_result_replay_consistency": "PASS",
+    "source_hashes_preserved": "PASS",
+    "current_cambc_build": "NOT RUN \u2014 CLI unavailable in packaging environment",
+    "new_matches": "NOT RUN \u2014 CLI unavailable in packaging environment"
+  },
+  "important": "Historical result verification confirms artifact consistency only, not current-runtime compatibility or bot superiority."
+}

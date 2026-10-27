@@ -1,130 +1,93 @@
-﻿# Cambridge Battlecode 2026 — Local Bot Matchmaker (Windows)
+﻿# Cambridge Battlecode 2026a — Complete Local Bot Matchmaker & Research Workspace
 
-This is a local-only matchmaker for comparing bot folders against the maps in `maps/`. It does **not** submit bots to the competition. It includes the bot sources currently in `bots/`, the map pool, CAMBC workspace configuration/SDK files, previous match plans/logs/replays, and the fixed automation/reporting scripts.
+This is a **local-only** Windows workspace for comparing four C++ bot variants across the included CAMBC map pool. It does not submit bots to the competition and does not automatically promote or overwrite a bot.
 
-## Quick start
+## Included
+- `bots/`: `candidate-bot`, `Ankv21`, `v20`, `v22`, source and per-bot configs.
+- `maps/`: 70 `.map26a` maps (refresh from the current official CLI before new benchmarks).
+- `replays/`: historical replay bundles.
+- `matches-*.csv/.txt`: match manifests and plans.
+- `reports/`: raw parsed outcomes, standings, head-to-head/per-map reports, XLSX workbook, and logs.
+- `bot-archives/`: preserved bot ZIP snapshots.
+- `scripts/`: setup, matchmaker, result parsing, plus new preflight, verification, and analysis utilities.
+- `research/`: repository audit, baseline, pipeline design, and improvement backlog.
 
-Open PowerShell in this extracted folder (the folder containing `cambc.toml`). If CAMBC is already installed and maps/builds are ready, run:
+## Existing local baseline — not proof of current-runtime strength
 
-```powershell
-.\Run-Matchmaker.ps1 -Mode CandidateVsAll -Coverage Quick
-```
+The included historical run has 420 outcomes over 70 maps, three opponents, and both seat orders:
+- candidate-bot vs Ankv21: 75–65 (53.57% candidate win rate)
+- candidate-bot vs v20: 69–71 (49.29%; v20 narrowly wins)
+- candidate-bot vs v22: 74–66 (52.86%)
+- candidate-bot aggregate: 218/420 wins (51.90%) against this opponent pool
 
-For a full map-pool run:
+Do not conclude candidate-bot is the strongest bot from the pooled rate. The direct comparison against v20 is a narrow loss; map samples are only six games each. The CLI/SDK must be refreshed and verified before treating historic results as current-patch evidence. See `research/IMPROVEMENT_BACKLOG.md`.
 
-```powershell
-.\Run-Matchmaker.ps1 -Mode CandidateVsAll -Coverage AllMaps -Jobs 2
-```
-
-To compare **every bot against every other bot** on all maps, with both team sides:
-
-```powershell
-.\Run-Matchmaker.ps1 -Mode AllPairs -Coverage AllMaps -Jobs 2
-```
-
-`Quick` tests the first map alphabetically. `AllMaps` tests every `.map26a` file under `maps/`. `Jobs` controls CAMBC batch parallelism; use `1` if your computer struggles.
-
-## First-time setup
-
-If `cambc --version` is not recognized, install the CLI:
+## Quick start (PowerShell)
+Open PowerShell in this extracted folder, containing root `cambc.toml`.
 
 ```powershell
-python -m pip install --upgrade cambc
-```
+# Read-only environment audit
+python .\scripts\preflight_audit.py
 
-Then build/check all bots and refresh the map pool:
-
-```powershell
-.\scripts\Setup-Workspace.ps1
-```
-
-If you explicitly want to upgrade CAMBC as part of setup:
-
-```powershell
+# Install/update CLI, pull official maps, build all configured bots
 .\scripts\Setup-Workspace.ps1 -InstallOrUpgradeCLI
+
+# Test ONE specific bot against ONE specific bot on the first map, both seat orders
+.\Run-Matchmaker.ps1 -Mode CandidateVsOpponent -Candidate candidate-bot -Opponent v20 -Coverage Quick
+
+# Test the same selected pair on ALL maps, both seat orders
+.\Run-Matchmaker.ps1 -Mode CandidateVsOpponent -Candidate candidate-bot -Opponent v20 -Coverage AllMaps -Jobs 2
+
+# Quick smoke test against every other configured bot (not a single-pair test)
+.\Run-Matchmaker.ps1 -Mode CandidateVsAll -Coverage Quick -Candidate candidate-bot
+
+# Full map-pool test
+.\Run-Matchmaker.ps1 -Mode CandidateVsAll -Coverage AllMaps -Jobs 2 -Candidate candidate-bot
+
+# All-pairs round-robin
+.\Run-Matchmaker.ps1 -Mode AllPairs -Coverage AllMaps -Jobs 2
+
+# Connected preflight → setup/build → match → verify → analyze
+.\Run-Research-Pipeline.ps1 -Mode CandidateVsAll -Coverage AllMaps -Jobs 2 -Candidate candidate-bot
 ```
 
-## Add another bot later
+If outputs collide, the existing runner asks whether to replace matching files, create timestamped outputs, or cancel. Use `-Jobs 1` if your machine struggles.
 
-1. Create or copy a bot folder under `bots/`, for example `bots\my-new-bot\`.
-2. Make sure it has the expected CAMBC bot structure: `bots\my-new-bot\cambc.toml` and `bots\my-new-bot\src\main.cpp` (plus its other source/header files).
-3. Build it from this workspace root:
+## Analyze the included historical run without replaying matches
+```powershell
+python .\scripts\verify_tournament.py --manifest .\matches-candidate-vs-all-AllMaps-20261026-162935.csv --results .\reports\tournament-match-results.csv --check-replays
+python .\scripts\analyze_tournament.py --input .\reports\tournament-match-results.csv --candidate candidate-bot
+```
 
-   ```powershell
-   cambc build my-new-bot
-   ```
+The verifier checks manifest/outcome consistency and replay existence. The analyzer writes additional reports under `reports/research-analysis/`, preserving original results.
 
-4. It is discovered automatically on the next run; no script editing is required. To test the new bot against all other discovered bots, set it as the candidate:
+## Next improvements
+1. Verify the official CLI version and supported SDK pin; CLI version and `sdk_version` are distinct.
+2. Build all bots on the current toolchain.
+3. Review weak map replays (`00packs`, `00monolith`, `01broken-curve`, `01elk-arena`, `01hooks`, `02famine`, `02treasure-box`, `adgato-gemcombat2`).
+4. Inspect evidence for path stalls, unsafe camp engagement, carrier deaths, capture timing and missed tributes before editing strategy.
+5. Change one strategy dimension at a time and benchmark on the same maps and both seats.
 
-   ```powershell
-   .\Run-Matchmaker.ps1 -Mode CandidateVsAll -Candidate my-new-bot -Coverage AllMaps -Jobs 2
-   ```
+## Validation boundaries
+- The included log reports 420 outcomes and 420 replay bundles saved with zero failed runs in that historical run.
+- The packaging step does not run CAMBC or rebuild C++ source.
+- External repo code with unverified licenses is not copied.
+- All matches are local. No ranked upload or automatic promotion occurs.
 
-   To include it in the complete round-robin, use `-Mode AllPairs`.
 
-Only folders that contain both `src/main.cpp` and `cambc.toml` are treated as bots. Keep map files under `maps/` with the `.map26a` extension.
+## One-specific-bot-versus-one-specific-bot mode
 
-## What happens automatically
-
-The matchmaker:
-
-- discovers bot folders automatically;
-- discovers `.map26a` maps automatically;
-- creates a unique match-plan `.txt` and manifest `.csv` for each run;
-- runs local matches and saves the console log and replay bundles;
-- parses actual winner lines from the log and creates result reports;
-- detects UTF-16 and UTF-8 log encodings (the Windows PowerShell/CAMBC log encoding issue is fixed);
-- validates that planned matches and parsed results line up, rather than silently treating missing outcomes as losses.
-
-After a successful tournament, these reports are refreshed under `reports/`:
-
-- `tournament-standings.csv` — wins/losses and win percentage per bot;
-- `tournament-match-results.csv` — each parsed match outcome;
-- `candidate-head-to-head.csv` — candidate results versus each opponent;
-- `candidate-by-map.csv` — candidate results by map;
-- `tournament-report.xlsx` — Excel workbook with Standings, Head-to-head, By-map, and Match results sheets (when Python's `openpyxl` is installed).
-
-The CSV files are the primary report format. If the parser says results are partial or unmatched, inspect the reported validation counts and the log before using the win rate.
-
-## Re-run analysis without replaying matches
-
-To re-create reports from a particular existing manifest and log, use:
+`Run-Matchmaker.ps1` now accepts `-Mode CandidateVsOpponent -Candidate <bot-folder> -Opponent <bot-folder>`. It generates only the selected pair, on the chosen map coverage, with both seat orders. Example:
 
 ```powershell
-python .\scripts\summarize_tournament_log.py --manifest .\matches-candidate-vs-all-AllMaps-YYYYMMDD-HHMMSS.csv --log .\reports\logs\candidate-vs-all-AllMaps-YYYYMMDD-HHMMSS.log
+# Candidate-bot vs v20 on the first map, both seat orders
+.\Run-Matchmaker.ps1 -Mode CandidateVsOpponent -Candidate candidate-bot -Opponent v20 -Coverage Quick
+
+# Candidate-bot vs v20 across every map, both seat orders
+.\Run-Matchmaker.ps1 -Mode CandidateVsOpponent -Candidate candidate-bot -Opponent v20 -Coverage AllMaps -Jobs 2
+
+# Compare two other bots directly
+.\Run-Matchmaker.ps1 -Mode CandidateVsOpponent -Candidate Ankv21 -Opponent v22 -Coverage AllMaps -Jobs 2
 ```
 
-Replace the placeholders with the real filenames. To let the parser choose the newest compatible manifest and log:
-
-```powershell
-python .\scripts\summarize_tournament_log.py
-```
-
-For a statistics-JSON-based run (separate from the batch matchmaker), use:
-
-```powershell
-.\scripts\Run-Stats-Tournament.ps1 -Mode CandidateVsAll -Coverage Quick
-python .\scripts\summarize_stats.py
-```
-
-The statistics runner depends on the installed CAMBC CLI's `--statistics` output format. Its summarizer marks unrecognized winner schemas as `UNKNOWN`, never as a loss. The regular matchmaker's log-based report is the tested path for the included batch results.
-
-## Inspect a replay
-
-Use the replay path from a match manifest/log, for example:
-
-```powershell
-cambc view replays\<actual-replay-filename>.repl26a
-```
-
-## Important notes
-
-- Compare bots on the same maps and both team sides; do not judge a bot from one match.
-- A local win rate is not official ladder Elo and can be affected by map selection, seeds, and match conditions.
-- Matchmaker scripts only run local tests. They do not upload or submit anything.
-- If a build fails, fix that bot before trusting the comparison.
-
-
-## Existing results and rematches
-
-Run `./Run-Matchmaker.ps1 -Mode CandidateVsAll -Coverage AllMaps -Jobs 2` from this folder. If planned replay files or fixed report files already exist, the matchmaker asks whether to (1) rematch and replace the matching outputs, (2) rematch with unique replay names and timestamped reports, or (3) cancel. Choosing cancel leaves existing files untouched. The tool performs local matches only and does not submit ranked bots.
+`Quick` creates two matches (A/B seat order) on one map. `AllMaps` creates two matches per map. It validates that both bot names exist and rejects using the same bot as both sides. Match plans and replays are timestamped/preserved using the existing collision-handling behavior.

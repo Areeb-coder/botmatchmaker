@@ -1,0 +1,17 @@
+{
+  "generated_at_utc": "2026-10-26T16:59:04.656259+00:00",
+  "status": "PASS",
+  "manifest": "/mnt/data/work_final/bestbot-workspace/matches-candidate-vs-all-AllMaps-20261026-162935.csv",
+  "results": "/mnt/data/work_final/bestbot-workspace/reports/tournament-match-results.csv",
+  "planned_matches": 420,
+  "result_rows": 420,
+  "unique_manifest_ids": 420,
+  "unique_result_ids": 420,
+  "matched_ids_checked": 420,
+  "maps_in_manifest": 70,
+  "replay_files_in_workspace": 420,
+  "replays_checked": true,
+  "missing_replays": [],
+  "errors": [],
+  "note": "PASS validates artifact consistency only; it does not prove current SDK compatibility or competitive strength."
+}
