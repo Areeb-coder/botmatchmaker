@@ -1,0 +1,8 @@
+build/
+.cambc/
+compile_commands.json
+bots/*/.cambc/
+matches/
+replays/
+bots/*/build/
+bots/*/target/

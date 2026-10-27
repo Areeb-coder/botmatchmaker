@@ -1,0 +1,4 @@
+﻿candidate,opponent,matches,wins,losses,win_pct,wilson95_low_pct,wilson95_high_pct
+candidate-bot,Ankv21,140,75,65,53.57,45.33,61.63
+candidate-bot,v22,140,74,66,52.86,44.62,60.94
+candidate-bot,v20,140,69,71,49.29,41.13,57.47

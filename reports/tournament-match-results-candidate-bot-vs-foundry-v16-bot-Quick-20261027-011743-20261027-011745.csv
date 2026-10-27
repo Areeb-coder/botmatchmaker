@@ -1,0 +1,3 @@
+﻿match_id,map,bot_a,bot_b,winner,loser,winner_seat,round,max_round
+00002,00ambush,foundry-v16-bot,candidate-bot,candidate-bot,foundry-v16-bot,B,2000,2000
+00001,00ambush,candidate-bot,foundry-v16-bot,candidate-bot,foundry-v16-bot,A,2000,2000

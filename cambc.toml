@@ -1,0 +1,6 @@
+# Cambridge Battlecode workspace configuration
+# Run cambc commands from this directory.
+bots_dir = "bots"
+maps_dir = "maps"
+replay = "replay.replay26"
+seed = 1
